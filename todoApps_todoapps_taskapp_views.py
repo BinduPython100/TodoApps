@@ -55,17 +55,21 @@ def task_view(request):
 @login_required(login_url='/login')
 def post_update(request, id):
     post = get_object_or_404(TaskForm, id=id)
-    form = TaskForms(request.POST or None, instance=post)
-    context = {'form': form}
-    if form.is_valid():
-        obj = form.save(commit=False)
-        obj.save()
-        messages.success(request, "You successfully updated the post")
+    if post.author == request.user:
+        form = TaskForms(request.POST or None, instance=post)
         context = {'form': form}
-        return redirect('/')
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.save()
+            messages.success(request, "You successfully updated the post")
+            context = {'form': form}
+            return redirect('/')
+        else:
+            context = {'form': form, }
+            return render(request, 'taskapp/taskupdate.html', context)
     else:
-        context = {'form': form, }
-        return render(request, 'taskapp/taskupdate.html', context)
+        messages.success(request, "You cannot have access to updated the post")
+        return redirect('/')
 
 
 @login_required(login_url='/login')
